@@ -1,5 +1,9 @@
 import java.util.Scanner;
 
+import manager.TaskManager;
+import model.*;
+import util.enums.*;
+
 public class Main {
 
     public static void main(String[] args) {
@@ -88,22 +92,22 @@ public class Main {
                     System.out.println("Введите номер задачи");
                     int id = scanner.nextInt();
                     scanner.nextLine();
-                    if (!taskManager.tasks.containsKey(id)){
+                    if (!taskManager.getTasks().containsKey(id)){
                         System.out.println("Задачи с таким номером нет");
                         break;
                     }
                     taskType = taskManager.getTask(id).getClass().toString();
                     switch (taskType) {
-                        case "class Epic":
+                        case "class model.Epic":
                             System.out.println("Введите имя эпика");
                             String epicName = scanner.nextLine();
                             System.out.println("Введите описание эпика");
                             String epicDescription = scanner.nextLine();
 
-                            Epic epic = new Epic(epicName, epicDescription, taskManager.getTask(id).status, id);
+                            Epic epic = new Epic(epicName, epicDescription, taskManager.getTask(id).getStatus(), id);
                             taskManager.updateTask(epic, TaskType.EPIC);
                             break;
-                        case "class Subtask":
+                        case "class model.Subtask":
                             System.out.println("Введите имя подзадачи");
                             String subtaskName = scanner.nextLine();
                             System.out.println("Введите описание подзадачи");
