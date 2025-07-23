@@ -8,7 +8,7 @@ import java.util.Objects;
 
 public class TaskManager {
     private HashMap<Integer, Task> tasks = new HashMap<>();
-    Integer maxId = 0;
+    private Integer maxId = 0;
 
     // Получение списка всех задач
     public void getListOfTasks(){
