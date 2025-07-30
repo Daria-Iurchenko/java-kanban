@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class EpicTest {
-    Epic epic;
+    private Epic epic;
 
     @BeforeEach
     public void beforeEach() {

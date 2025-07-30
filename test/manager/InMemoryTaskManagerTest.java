@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class InMemoryTaskManagerTest {
 
-    InMemoryTaskManager taskManager = new InMemoryTaskManager();
+    private final InMemoryTaskManager taskManager = new InMemoryTaskManager();
 
     //Проверяем корректность добавления эпика и его получения по методу getTask
     @Test
