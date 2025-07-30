@@ -29,13 +29,16 @@ public class Epic extends Task{
         this.subtasks = subtasks;
     }
 
-    //проблема с тем, по индексу удалится или нет
     public void deleteSubtask(int subtaskNum){
         this.subtasks.remove((Object) subtaskNum);
     }
 
     public void addSubtask(int subtaskNum){
-        this.subtasks.add(subtaskNum);
+        if (subtaskNum != id){
+            this.subtasks.add(subtaskNum);
+        } else{
+            System.out.println("Номер подзадачи должен отличаться от номера эпика. Подзадача не добавлена в эпик");
+        }
     }
 
 }

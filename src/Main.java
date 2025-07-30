@@ -1,52 +1,120 @@
 import java.util.Scanner;
 
-import manager.TaskManager;
+import manager.InMemoryHistoryManager;
+import manager.InMemoryTaskManager;
+import manager.Managers;
 import model.*;
 import util.enums.*;
 
 public class Main {
 
     public static void main(String[] args) {
-        TaskManager taskManager = new TaskManager();
+        boolean isInMemory = Managers.getDefault() instanceof InMemoryTaskManager;
+        InMemoryTaskManager taskManager;
         Scanner scanner = new Scanner(System.in);
 
-        while (true) {
-            printMenu();
-            String command = scanner.nextLine();
-            String taskType;
+        if (isInMemory){
+            taskManager = (InMemoryTaskManager) Managers.getDefault();
+            InMemoryHistoryManager historyManager = (InMemoryHistoryManager) Managers.getDefaultHistory();
+            while (true) {
+                printMenu();
+                String command = scanner.nextLine();
+                String taskType;
 
-            switch (command) {
-                case "1":
-                    taskManager.getListOfTasks();
-                    break;
-                case "2":
-                    taskManager.clearTasks();
-                    break;
-                case "3":
-                    System.out.println("Введите номер задачи");
-                    int taskId = scanner.nextInt();
-                    scanner.nextLine();
-                    if (taskManager.getTask(taskId) != null){
-                        System.out.println(taskManager.getTask(taskId).toString());
-                    }
-                    break;
-                case "4":
-                    System.out.println("Выберите тип задачи: TASK, EPIC, SUBTASK");
-                    taskType = scanner.nextLine();
-                    Status checkStatus;
-                    try {
-                        TaskType type = TaskType.valueOf(taskType);//Для мгновенной проверки значения
+                switch (command) {
+                    case "1":
+                        taskManager.getListOfTasks();
+                        break;
+                    case "2":
+                        taskManager.clearTasks();
+                        break;
+                    case "3":
+                        System.out.println("Введите номер задачи");
+                        int taskId = scanner.nextInt();
+                        scanner.nextLine();
+                        if (taskManager.getTask(taskId) != null){
+                            System.out.println(taskManager.getTask(taskId).toString());
+                            historyManager.add(taskManager.getTask(taskId));
+                        }
+                        break;
+                    case "4":
+                        System.out.println("Выберите тип задачи: TASK, EPIC, SUBTASK");
+                        taskType = scanner.nextLine();
+                        Status checkStatus;
+                        try {
+                            TaskType type = TaskType.valueOf(taskType);//Для мгновенной проверки значения
+                            switch (taskType) {
+                                case "EPIC":
+                                    System.out.println("Введите имя эпика");
+                                    String epicName = scanner.nextLine();
+                                    System.out.println("Введите описание эпика");
+                                    String epicDescription = scanner.nextLine();
+
+                                    Epic epic = new Epic(epicName, epicDescription, Status.NEW, taskManager.setId());
+                                    taskManager.createTask(epic, TaskType.EPIC);
+                                    break;
+                                case "SUBTASK":
+                                    System.out.println("Введите имя подзадачи");
+                                    String subtaskName = scanner.nextLine();
+                                    System.out.println("Введите описание подзадачи");
+                                    String subtaskDescription = scanner.nextLine();
+                                    System.out.println("Введите статус подзадачи: NEW/IN_PROGRESS/DONE");
+                                    String subtaskStatus = scanner.nextLine();
+
+                                    try {
+                                        checkStatus = Status.valueOf(subtaskStatus);//Для мгновенной проверки значения
+                                        System.out.println("Введите номер родительского эпика");
+                                        int epicId = scanner.nextInt();
+                                        scanner.nextLine();
+
+                                        Subtask subtask = new Subtask(subtaskName, subtaskDescription, Status.valueOf(subtaskStatus), taskManager.setId(), epicId);
+                                        taskManager.createTask(subtask, TaskType.SUBTASK);
+                                    } catch (IllegalArgumentException e) {
+                                        System.err.println("Ошибка: строка '" + subtaskStatus + "' не соответствует ни одному из указанных значений");
+                                    }
+                                    break;
+                                default:
+                                    System.out.println("Введите имя задачи");
+                                    String name = scanner.nextLine();
+                                    System.out.println("Введите описание задачи");
+                                    String description = scanner.nextLine();
+                                    System.out.println("Введите статус задачи: NEW/IN_PROGRESS/DONE");
+                                    String status = scanner.nextLine();
+
+                                    try {
+                                        checkStatus = Status.valueOf(status);//Для мгновенной проверки значения
+                                        Task task = new Task(name, description, Status.valueOf(status), taskManager.setId());
+                                        taskManager.createTask(task, TaskType.TASK);
+                                    } catch (IllegalArgumentException e) {
+                                        System.err.println("Ошибка: строка '" + status + "' не соответствует ни одному из указанных значений");
+                                    }
+                                    break;
+                            }
+                        } catch (IllegalArgumentException e) {
+                            System.err.println("Ошибка: строка '" + taskType + "' не соответствует ни одному из указанных значений");
+                        }
+
+                        break;
+                    case "5":
+                        System.out.println("Введите номер задачи");
+                        int id = scanner.nextInt();
+                        scanner.nextLine();
+                        if (!taskManager.getTasks().containsKey(id)){
+                            System.out.println("Задачи с таким номером нет");
+                            break;
+                        }
+                        taskType = taskManager.getTask(id).getClass().toString();
                         switch (taskType) {
-                            case "EPIC":
+                            case "class model.Epic":
                                 System.out.println("Введите имя эпика");
                                 String epicName = scanner.nextLine();
                                 System.out.println("Введите описание эпика");
                                 String epicDescription = scanner.nextLine();
 
-                                Epic epic = new Epic(epicName, epicDescription, Status.NEW, taskManager.setId());
-                                taskManager.createTask(epic, TaskType.EPIC);
+                                Epic epic = new Epic(epicName, epicDescription, taskManager.getTask(id).getStatus(), id);
+                                taskManager.updateTask(epic, TaskType.EPIC);
                                 break;
-                            case "SUBTASK":
+                            case "class model.Subtask":
                                 System.out.println("Введите имя подзадачи");
                                 String subtaskName = scanner.nextLine();
                                 System.out.println("Введите описание подзадачи");
@@ -57,11 +125,11 @@ public class Main {
                                 try {
                                     checkStatus = Status.valueOf(subtaskStatus);//Для мгновенной проверки значения
                                     System.out.println("Введите номер родительского эпика");
-                                    int epicId = scanner.nextInt();
+                                    int parentEpicId = scanner.nextInt();
                                     scanner.nextLine();
 
-                                    Subtask subtask = new Subtask(subtaskName, subtaskDescription, Status.valueOf(subtaskStatus), taskManager.setId(), epicId);
-                                    taskManager.createTask(subtask, TaskType.SUBTASK);
+                                    Subtask subtask = new Subtask(subtaskName, subtaskDescription, Status.valueOf(subtaskStatus), id, parentEpicId);
+                                    taskManager.updateTask(subtask, TaskType.SUBTASK);
                                 } catch (IllegalArgumentException e) {
                                     System.err.println("Ошибка: строка '" + subtaskStatus + "' не соответствует ни одному из указанных значений");
                                 }
@@ -76,91 +144,36 @@ public class Main {
 
                                 try {
                                     checkStatus = Status.valueOf(status);//Для мгновенной проверки значения
-                                    Task task = new Task(name, description, Status.valueOf(status), taskManager.setId());
-                                    taskManager.createTask(task, TaskType.TASK);
+                                    Task task = new Task(name, description, Status.valueOf(status), id);
+                                    taskManager.updateTask(task, TaskType.TASK);
                                 } catch (IllegalArgumentException e) {
                                     System.err.println("Ошибка: строка '" + status + "' не соответствует ни одному из указанных значений");
                                 }
                                 break;
                         }
-                    } catch (IllegalArgumentException e) {
-                        System.err.println("Ошибка: строка '" + taskType + "' не соответствует ни одному из указанных значений");
-                    }
-
-                    break;
-                case "5":
-                    System.out.println("Введите номер задачи");
-                    int id = scanner.nextInt();
-                    scanner.nextLine();
-                    if (!taskManager.getTasks().containsKey(id)){
-                        System.out.println("Задачи с таким номером нет");
                         break;
-                    }
-                    taskType = taskManager.getTask(id).getClass().toString();
-                    switch (taskType) {
-                        case "class model.Epic":
-                            System.out.println("Введите имя эпика");
-                            String epicName = scanner.nextLine();
-                            System.out.println("Введите описание эпика");
-                            String epicDescription = scanner.nextLine();
-
-                            Epic epic = new Epic(epicName, epicDescription, taskManager.getTask(id).getStatus(), id);
-                            taskManager.updateTask(epic, TaskType.EPIC);
-                            break;
-                        case "class model.Subtask":
-                            System.out.println("Введите имя подзадачи");
-                            String subtaskName = scanner.nextLine();
-                            System.out.println("Введите описание подзадачи");
-                            String subtaskDescription = scanner.nextLine();
-                            System.out.println("Введите статус подзадачи: NEW/IN_PROGRESS/DONE");
-                            String subtaskStatus = scanner.nextLine();
-
-                            try {
-                                checkStatus = Status.valueOf(subtaskStatus);//Для мгновенной проверки значения
-                                System.out.println("Введите номер родительского эпика");
-                                int parentEpicId = scanner.nextInt();
-                                scanner.nextLine();
-
-                                Subtask subtask = new Subtask(subtaskName, subtaskDescription, Status.valueOf(subtaskStatus), id, parentEpicId);
-                                taskManager.updateTask(subtask, TaskType.SUBTASK);
-                            } catch (IllegalArgumentException e) {
-                                System.err.println("Ошибка: строка '" + subtaskStatus + "' не соответствует ни одному из указанных значений");
-                            }
-                            break;
-                        default:
-                            System.out.println("Введите имя задачи");
-                            String name = scanner.nextLine();
-                            System.out.println("Введите описание задачи");
-                            String description = scanner.nextLine();
-                            System.out.println("Введите статус задачи: NEW/IN_PROGRESS/DONE");
-                            String status = scanner.nextLine();
-
-                            try {
-                                checkStatus = Status.valueOf(status);//Для мгновенной проверки значения
-                                Task task = new Task(name, description, Status.valueOf(status), id);
-                                taskManager.updateTask(task, TaskType.TASK);
-                            } catch (IllegalArgumentException e) {
-                                System.err.println("Ошибка: строка '" + status + "' не соответствует ни одному из указанных значений");
-                            }
-                            break;
-                    }
-                    break;
-                case "6":
-                    System.out.println("Введите номер задачи");
-                    int deletedTaskId = scanner.nextInt();
-                    scanner.nextLine();
-                    taskManager.deleteTask(deletedTaskId);
-                    break;
-                case "7":
-                    System.out.println("Введите номер эпика");
-                    int epicId = scanner.nextInt();
-                    scanner.nextLine();
-                    taskManager.getEpicTasks(epicId);
-                    break;
-                case "8":
-                    return;
-                default:
-                    System.out.println("Введена несуществующая команда\nПожалуйста, введите команду из списка.");
+                    case "6":
+                        System.out.println("Введите номер задачи");
+                        int deletedTaskId = scanner.nextInt();
+                        scanner.nextLine();
+                        taskManager.deleteTask(deletedTaskId);
+                        break;
+                    case "7":
+                        System.out.println("Введите номер эпика");
+                        int epicId = scanner.nextInt();
+                        scanner.nextLine();
+                        taskManager.getEpicTasks(epicId);
+                        break;
+                    case "8":
+                        for (int i = historyManager.getHistory().size() - 1; i >= 0; i--){
+                            System.out.println(historyManager.getHistory().get(i));
+                        }
+                        break;
+                    case "9":
+                        return;
+                    default:
+                        System.out.println("Введена несуществующая команда\nПожалуйста, введите команду из списка.");
+                }
             }
         }
     }
@@ -174,6 +187,7 @@ public class Main {
         System.out.println("5 - Обновить задачу");
         System.out.println("6 - Удалить задачу по идентификатору");
         System.out.println("7 - Отобразить все подзадачи для эпика по его идентификатору");
-        System.out.println("8 - Выход");
+        System.out.println("8 - Отобразить историю просмотров задач");
+        System.out.println("9 - Выход");
     }
 }

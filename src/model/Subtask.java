@@ -6,7 +6,11 @@ public class Subtask extends Task {
 
     public Subtask(String name, String description, Status status, int id, int epicId){
         super(name, description, status, id);
-        this.epicId = epicId;
+        if (epicId != id){
+            this.epicId = epicId;
+        } else{
+            System.out.println("Номер эпика должен отличаться от номера подзадачи. Номер эпика не заполнен.");
+        }
     }
 
     @Override
@@ -25,6 +29,10 @@ public class Subtask extends Task {
     }
 
     public void setEpicId(int epicId) {
-        this.epicId = epicId;
+        if (epicId != id){
+            this.epicId = epicId;
+        } else{
+            System.out.println("Номер эпика должен отличаться от номера подзадачи. Номер эпика не скорректирован.");
+        }
     }
 }
